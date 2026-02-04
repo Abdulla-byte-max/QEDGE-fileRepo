@@ -14,4 +14,85 @@ public class Main {
     }
 }
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Random;
 
+public class SnakeGame extends JPanel implements ActionListener, KeyListener {
+    private static final int TILE_SIZE = 25;
+    private static final int BOARD_WIDTH = 20;
+    private static final int BOARD_HEIGHT = 20;
+    private static final int DELAY = 100;
+    
+    private ArrayList<Point> snake;
+    private Point food;
+    private int direction; // 0=UP, 1=RIGHT, 2=DOWN, 3=LEFT
+    private boolean running;
+    private Timer timer;
+    private Random random;
+    private int score;
+    
+    public SnakeGame() {
+        random = new Random();
+        setPreferredSize(new Dimension(BOARD_WIDTH * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE));
+        setBackground(Color.BLACK);
+        setFocusable(true);
+        addKeyListener(this);
+        
+        initGame();
+    }
+    
+    private void initGame() {
+        snake = new ArrayList<>();
+        snake.add(new Point(BOARD_WIDTH / 2, BOARD_HEIGHT / 2));
+        snake.add(new Point(BOARD_WIDTH / 2, BOARD_HEIGHT / 2 + 1));
+        snake.add(new Point(BOARD_WIDTH / 2, BOARD_HEIGHT / 2 + 2));
+        
+        direction = 0; // Start moving up
+        score = 0;
+        spawnFood();
+        running = true;
+        
+        if (timer != null) {
+            timer.stop();
+        }
+        timer = new Timer(DELAY, this);
+        timer.start();
+    }
+    
+    private void spawnFood() {
+        int x, y;
+        do {
+            x = random.nextInt(BOARD_WIDTH);
+            y = random.nextInt(BOARD_HEIGHT);
+        } while (isSnakeAt(x, y));
+        
+        food = new Point(x, y);
+    }
+    
+    private boolean isSnakeAt(int x, int y) {
+        for (Point p : snake) {
+            if (p.x == x && p.y == y) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    private void move() {
+        Point head = snake.get(0);
+        Point newHead = new Point(head.x, head.y);
+        
+        switch (direction) {
+            case 0: newHead.y--; break; // UP
+            case 1: newHead.x++; break; // RIGHT
+            case 2: newHead.y++; break; // DOWN
+            case 3: newHead.x--; break; // LEFT
+        }
+        
+        // Check collision with walls
+        if (newHead.x < 0 || newHead.x >= BOARD_WIDTH || 
+            newHead.y < 0 || newHead.y >= BOARD_HEIGHT) {
+            gameOver();
